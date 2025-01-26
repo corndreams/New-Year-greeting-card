@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+    *{ margin:0; padding:0;}
+    ul{ list-style: none;}
+    img{ display: block;}
+
+    #page1{ width:100vw; height: 100vh; background:url(./static/page1_bg.png) center; background-size: cover;}
+    #page1 .page1-lantern{ width:70px; height: 61px; background:url(./static/page1_lantern.png); background-size: cover; margin: 0 auto;}
+    #page1 .page1-frame{ width:200px; height:62px; background:url(./static/page1_frame.png); background-size:cover; margin:20px auto; line-height: 62px; text-align: center; color:white; font-weight: bold; font-size: 18px;}
+    #page1 .page1-text{ width:100px; height:301px; background:url(./static/page1_text.png); background-size:cover; margin:0 auto;}
+    #page1 .page1-fence{ width:100vw; height:150px; background:url(./static/page1_fence.png) center bottom; background-size:100%; position: absolute; bottom: 0;}
+    #page1 .page1-p1{ position: absolute; width:92px; height: 165px; background:url(./static/page1_p1.png); background-size:cover; left:50%; top:-35px; margin-left: -55px; transform-origin: center bottom; animation: 2s ease-in-out infinite prun -1s;}
+    #page1 .page1-p2{ position: absolute; width:135px; height: 174px; background:url('./static/page1_p2.png'); background-size: cover; left:5%; top:-50px; transform-origin: center bottom; animation: 2s ease-in-out infinite prun -1.5s;}
+    #page1 .page1-p3{ position: absolute; width:145px; height:145px; background:url(./static/page1_p3.png); background-size:cover; right:2%; top:-30px; transform-origin: center bottom; animation: 2s ease-in-out infinite prun;}
+    @keyframes prun {
+        0%{ transform: rotate(-2deg);}
+        50%{ transform: rotate(2deg);}
+        100%{ transform: rotate(-2deg);}
+    }
+    #music{ width:30px; height:30px; background:url(./static/music_icon.png); background-size:cover; position: absolute; right:10px; top:10px;}
+    #music.run{ animation: 2s linear infinite mrun;}
+    @keyframes mrun {
+        0%{ transform: rotate(0deg);}
+        100%{ transform: rotate(360deg);}
+    }
+    #page2{ display: none; width:100vw; height: 100vh; background:#b82a1e;}
+    #page3{ width:100vw; height:100vh; position: absolute; left:0; top:0; background:rgba(0,0,0,0.8); display: none;}
+    #page3 .page3-arrow{ width:150px; height:150px; background:url(./static/page3_arrow.png); background-size: cover; position: absolute; right:20px; top:20px; transform: rotate(60deg);}
+    #page3 .page3-rocket{ width:60px; height:131px; background:url(./static/page3_rocket.png); background-size: cover; margin-top:100px; margin-left:auto; margin-right:auto;}
+    #page3 p{ margin-top:20px; text-align: center; line-height: 30px; font-size:20px; color:white; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <div id="page1">
+        <div class="page1-lantern"></div>
+        <div class="page1-frame">
+            12.31 23:59:5<span>5</span>
+        </div>
+        <div class="page1-text"></div>
+        <div class="page1-fence">
+            <div class="page1-p1"></div>
+            <div class="page1-p2"></div>
+            <div class="page1-p3"></div>
+        </div>
+    </div>
+    <div id="page2">
+        <canvas></canvas>
+    </div>
+    <div id="page3">
+        <div class="page3-arrow"></div>
+        <div class="page3-rocket"></div>
+        <p>
+            点击左上角<br>
+            分享到朋友圈
+        </p>
+    </div>
+    <div id="music">
+        <audio src="./static/music_bg.mp3" loop></audio>
+    </div>
+    <div id="fireSound">
+        <audio src="./static/fire_sound.mp3" loop></audio>
+        <audio src="./static/fire_sound.mp3" loop></audio>
+        <audio src="./static/fire_sound.mp3" loop></audio>
+    </div>
+    <script>
+
+loadStatic(['./static/page2_text1.png','./static/page2_text2.png','./static/page2_text3.png','./static/page2_text4.png','./static/page2_text5.png','./static/page2_text6.png']).then((statics)=>{
+
+       
+
+        musicBg();
+        countDown();
+        
+        function musicBg(){
+            let music = document.querySelector('#music');
+            let musicAudio = music.querySelector('audio');
+            let fireSoundAudios = document.querySelectorAll('#fireSound audio');
+            musicAudio.volume = 0.2;
+            music.addEventListener('click',function(){
+                if(musicAudio.paused){
+                    this.className = 'run';
+                    musicAudio.play();
+                    for(let i=0;i<fireSoundAudios.length;i++){
+                        fireSoundAudios[i].play();
+                        fireSoundAudios[i].muted = true;
+                        fireSoundAudios[i].currentTime = i;
+                    }
+                }
+                else{
+                    this.className = '';
+                    musicAudio.pause();
+                    for(let i=0;i<fireSoundAudios.length;i++){
+                        fireSoundAudios[i].pause();
+                    }
+                }
+            });
+        }
+        function countDown(){
+            let countNumber = document.querySelector('.page1-frame span');
+            let page1 = document.querySelector('#page1');
+            let page2 = document.querySelector('#page2');
+            let timer = setInterval(()=>{
+                if(countNumber.innerHTML == 9){
+                    clearInterval(timer);
+                    page1.style.display = 'none';
+                    page2.style.display = 'block';
+                    initFires();
+                }
+                else{
+                    countNumber.innerHTML = ++countNumber.innerHTML;
+                }
+            },1000);
+        }
+
+        function initFires(){
+            let page3 = document.querySelector('#page3');
+            let canvas = document.querySelector('#page2 canvas');
+            let ctx = canvas.getContext('2d');
+            let fireSoundAudios = document.querySelectorAll('#fireSound audio');
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            let balls = [];
+            let fires = [];
+            let textFires = [];
+            let timer = null;
+            let count = 0;
+            let ballsAll = 10;
+            let textsAll = 5;
+            let textsPos = [
+                { x : width/4 , y : height/4 + 30 },
+                { x : width/4 * 3 , y : height/4 - 30 },
+                { x : width/2 , y : height/2 },
+                { x : width/4 , y : height/4 * 3 },
+                { x : width/4 * 3 , y : height/4 * 3 + 50 }
+            ];
+            let points1 = getImagePoints(statics[0] , 4);
+            let points2 = [];
+            for(let i=1;i<statics.length;i++){
+                points2.push( getImagePoints(statics[i] , 4) );
+            }
+            canvas.width = width;
+            canvas.height = height;
+            
+
+            timer = setInterval(()=>{
+                if(count == ballsAll){
+                    clearInterval(timer);
+                    count = 0;
+                    timer = null;
+                    //------------------------------------------------
+balls.push(
+    new Ball({
+        x : width/2,
+        y : height,
+        vx : 0,
+        vy : -10,
+        end(){
+            if( this.vy > 1 ){
+                balls.splice( balls.indexOf(this) , 1 );
+                for(let i=0;i<60;i++){
+                    let power = Math.random() * 10;
+                    let vx = Math.cos(i*6*Math.PI/180) * power;
+                    let vy = Math.sin(i*6*Math.PI/180) * power;
+                    fires.push(
+                        new Fire({
+                            r : 3,
+                            x : this.x,
+                            y : this.y,
+                            vx : vx,
+                            vy : vy,
+                            g : 0.05,
+                            end(){
+                                if(this.life < 10){
+                                    fires.splice( fires.indexOf(this) , 1 );
+                                }
+                            }
+                        })
+                    );
+                }
+
+                for(let i=0;i<points1.length;i++){
+                    let power = 0.05;
+                    let vx = (points1[i].x - points1.w/2) * power;
+                    let vy = (points1[i].y - points1.h/2) * power;
+                    textFires.push(
+                        new TextFire({
+                            x : this.x,
+                            y : this.y,
+                            vx : vx,
+                            vy : vy,
+                            g : 0.03,
+                            life : 200,
+                            r : 1,
+                            end(){
+                                if(this.life < 10){
+                                    textFires.splice( textFires.indexOf(this) , 1 );
+                                }
+                            }
+                        })
+                    );
+                }
+
+                timer = setInterval(()=>{
+                    if( count == textsAll ){
+                        clearInterval(timer);
+                        count = 0;
+                        timer = null;
+                        setTimeout(()=>{
+                            page3.style.display = 'block';
+                        },5000);
+                    }
+                    else{
+                        count++;
+                        //---------------------------------------
+let nowPos = textsPos.pop();
+let power = 0.01;
+let vx = (nowPos.x - width/2) * power;
+let vy = (nowPos.y - height) * power;
+balls.push(
+    new Ball({
+        x : width/2,
+        y : height,
+        r : 3,
+        vx : vx,
+        vy : vy,
+        tx : nowPos.x,
+        ty : nowPos.y,
+        index : count - 1,
+        g : 0,
+        end(){
+            if( this.y - this.ty < 0 ){
+                balls.splice( balls.indexOf(this) , 1 );
+                for(let i=0;i<60;i++){
+                    let power = Math.random() * 10;
+                    let vx = Math.cos(i*6*Math.PI/180) * power;
+                    let vy = Math.sin(i*6*Math.PI/180) * power;
+                    fires.push(
+                        new Fire({
+                            r : 1,
+                            x : this.x,
+                            y : this.y,
+                            vx : vx,
+                            vy : vy,
+                            g : 0,
+                            life : 300
+                        })
+                    );
+                }
+                for(let i=0;i<points2[this.index].length;i++){
+                    let power = 0.05;
+                    let vx = (points2[this.index][i].x - points2[this.index].w/2) * power;
+                    let vy = (points2[this.index][i].y - points2[this.index].h/2) * power;
+                    textFires.push(
+                        new TextFire({
+                            x : this.x,
+                            y : this.y,
+                            vx : vx,
+                            vy : vy,
+                            g : 0,
+                            fs : 0.92,
+                            life : 300,
+                            r : 1
+                        })
+                    );
+                }
+            }
+        }
+    })
+);
+                        //---------------------------------------
+                    }
+                },300);
+
+            }
+        }
+    })
+);
+                    //------------------------------------------------
+
+                }
+                else{
+                    count++;
+                    //-----------------------------------------------
+balls.push(
+    new Ball({
+        r : 3,
+        x : Math.random() * width/3 + width/3,
+        y : height,
+        vx : Math.random() * 2 - 1,
+        vy : - Math.random() * 2 - 9,
+        end(){
+            if( this.vy > 1 ){
+                balls.splice( balls.indexOf(this) , 1 );
+                let size = Math.random() * 10;
+                for(let i=0;i<60;i++){
+                    let power = Math.random() * size;
+                    let vx = Math.cos(i*6*Math.PI/180) * power;
+                    let vy = Math.sin(i*6*Math.PI/180) * power;
+                    fires.push(
+                        new Fire({
+                            r : 3,
+                            x : this.x,
+                            y : this.y,
+                            vx : vx,
+                            vy : vy,
+                            g : 0.05,
+                            end(){
+                                if(this.life < 10){
+                                    fires.splice( fires.indexOf(this) , 1 );
+                                }
+                            }
+                        })
+                    );
+                }
+            }
+        }
+    })
+);
+                    //-----------------------------------------------
+                }
+            },500);
+
+    loop();
+    function loop(){
+
+        if(balls.length){
+            for(let i=0;i<fireSoundAudios.length;i++){
+                fireSoundAudios[i].muted = false;
+            }
+            ctx.fillStyle = 'rgba(184,42,30,0.2)';
+            ctx.fillRect(0,0,width,height);
+        }
+        else{
+            for(let i=0;i<fireSoundAudios.length;i++){
+                fireSoundAudios[i].muted = true;
+            }
+            ctx.fillStyle = 'rgb(184,42,30)';
+            ctx.fillRect(0,0,width,height);
+        }
+       
+
+        for(let i=0;i<balls.length;i++){
+            balls[i].update();
+            balls[i].render();
+        }
+
+        for(let i=0;i<fires.length;i++){
+            fires[i].update();
+            fires[i].render();
+        }
+
+        for(let i=0;i<textFires.length;i++){
+            textFires[i].update();
+            textFires[i].render();
+        }
+
+        requestAnimationFrame(loop);
+    }
+            class Ball {
+                constructor(options){
+                    this.settings = Object.assign({
+                        color : 'yellow',
+                        r : 5,
+                        g : 0.1,
+                        end(){}
+                    },options);
+                    for(let attr in this.settings){
+                        this[attr] = this.settings[attr];
+                    }
+                }
+                update(){
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += this.g;
+                }
+                render(){
+                    ctx.beginPath();
+                    ctx.fillStyle = this.color;
+                    ctx.arc(this.x , this.y , this.r , 0 , 360 * Math.PI / 180 );
+                    ctx.closePath();
+                    ctx.fill();
+                    this.end();
+                }
+            }
+
+            class Fire {
+                constructor(options){
+                    this.settings = Object.assign({
+                        color : 'yellow',
+                        r : 5,
+                        g : 0.1,
+                        fs : 0.95,
+                        life : 100,
+                        end(){}
+                    },options);
+                    for(let attr in this.settings){
+                        this[attr] = this.settings[attr];
+                    }
+                }
+                update(){
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += this.g;
+                    this.vx *= this.fs;
+                    this.vy *= this.fs;
+                    if(this.life > 0 && this.life < 300){
+                        this.life--;
+                    }
+                }
+                render(){
+                    ctx.beginPath();
+                    ctx.fillStyle = this.color;
+                    ctx.arc(this.x , this.y , this.r * Math.min(this.life , 100)/100 , 0 , 360 * Math.PI / 180 );
+                    ctx.closePath();
+                    ctx.fill();
+                    this.end();
+                }
+            }
+
+            class TextFire {
+                constructor(options){
+                    this.settings = Object.assign({
+                        color : 'yellow',
+                        r : 5,
+                        g : 0.1,
+                        fs : 0.95,
+                        life : 100,
+                        end(){}
+                    },options);
+                    for(let attr in this.settings){
+                        this[attr] = this.settings[attr];
+                    }
+                }
+                update(){
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if(this.life < 100){
+                        this.vy += this.g;
+                    }
+                    this.vx *= this.fs;
+                    this.vy *= this.fs;
+                    if(this.life > 0 && this.life < 300){
+                        this.life--;
+                    }
+                }
+                render(){
+                    ctx.beginPath();
+                    ctx.fillStyle = this.color;
+                    ctx.arc(this.x , this.y , this.r * Math.min(this.life , 100)/100 , 0 , 360 * Math.PI / 180 );
+                    ctx.closePath();
+                    ctx.fill();
+                    this.end();
+                }
+            }
+
+            function getImagePoints( img , level = 5 ){
+                let width = img.width;
+                let height = img.height;
+                let points = [];
+                let x = Math.floor(width/level);
+                let y = Math.floor(height/level);
+                let imgData = null;
+                ctx.clearRect(0,0,width,height);
+                ctx.beginPath();
+                ctx.drawImage(img , 0 , 0);
+                ctx.closePath();
+                imgData = ctx.getImageData(0,0,width,height);
+                ctx.clearRect(0,0,width,height);
+                points.w = width;
+                points.h = height;
+
+                for(let i=0;i<y;i++){
+                    for(let j=0;j<x;j++){
+                       let colors = getImageColor( imgData , j * level , i * level );
+                       if( colors[0] == 255 ){
+                            points.push({ x : j * level , y : i * level });
+                       }
+                    }
+                }
+
+                return points;
+            }
+
+            function getImageColor(imgData , x , y){
+                let w = imgData.width;
+                let h = imgData.height;
+                let d = imgData.data;  
+                let colors = [];
+                colors[0] = d[ (y*w + x)*4 ];
+                colors[1] = d[ (y*w + x)*4 + 1 ];
+                colors[2] = d[ (y*w + x)*4 + 2 ];
+                colors[3] = d[ (y*w + x)*4 + 3 ];
+                return colors;
+            }
+
+        }
+
+});
+
+function loadStatic(arr){
+    let promises = [];
+    for(let i=0;i<arr.length;i++){
+        let promise = new Promise(function(resolve,reject){
+            let img = new Image();
+            img.src = arr[i];
+            img.onload = function(){
+                resolve(img);
+            };
+        });
+        promises.push(promise);
+    }
+    return Promise.all(promises);
+}
+    </script>
+</body>
+</html>
